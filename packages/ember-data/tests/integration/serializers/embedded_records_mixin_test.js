@@ -594,7 +594,7 @@ test("serialize with embedded objects (hasMany relationship)", function() {
 
   deepEqual(json, {
     name: "Villain League",
-    villains: [{
+    villains_attributes: [{
       id: get(tom, "id"),
       first_name: "Tom",
       last_name: "Dale",
@@ -646,7 +646,7 @@ test("serialize with (new) embedded objects (hasMany relationship)", function() 
   });
   deepEqual(json, {
     name: "Villain League",
-    villains: [{
+    villains_attributes: [{
       first_name: "Tom",
       last_name: "Dale",
       home_planet_id: get(league, "id"),
@@ -680,7 +680,7 @@ test("serialize with embedded objects (hasMany relationships, including related 
     first_name: get(superVillain, "firstName"),
     last_name: get(superVillain, "lastName"),
     home_planet_id: null,
-    evil_minions: [{
+    evil_minions_attributes: [{
       id: get(evilMinion, "id"),
       name: get(evilMinion, "name"),
       super_villain_id: "1"
@@ -771,7 +771,7 @@ test("serialize with embedded object (belongsTo relationship)", function() {
     first_name: get(tom, "firstName"),
     last_name: get(tom, "lastName"),
     home_planet_id: get(tom, "homePlanet").get("id"),
-    secret_lab: {
+    secret_lab_attributes: {
       id: get(tom, "secretLab").get("id"),
       minion_capacity: get(tom, "secretLab").get("minionCapacity"),
       vicinity: get(tom, "secretLab").get("vicinity")
@@ -814,7 +814,7 @@ test("serialize with embedded object (belongsTo relationship) works with differe
     first_name: get(tom, "firstName"),
     last_name: get(tom, "lastName"),
     home_planet_id: get(tom, "homePlanet").get("id"),
-    secret_lab: {
+    secret_lab_attributes: {
       crazy_id: get(tom, "secretLab").get("id"),
       minion_capacity: get(tom, "secretLab").get("minionCapacity"),
       vicinity: get(tom, "secretLab").get("vicinity")
@@ -853,7 +853,7 @@ test("serialize with embedded object (belongsTo relationship, new no id)", funct
     first_name: get(tom, "firstName"),
     last_name: get(tom, "lastName"),
     home_planet_id: get(tom, "homePlanet").get("id"),
-    secret_lab: {
+    secret_lab_attributes: {
       minion_capacity: get(tom, "secretLab").get("minionCapacity"),
       vicinity: get(tom, "secretLab").get("vicinity")
     }
@@ -1019,7 +1019,7 @@ test("when related record is not present, serialize embedded record (with a belo
     first_name: get(tom, "firstName"),
     last_name: get(tom, "lastName"),
     home_planet_id: get(tom, "homePlanet").get("id"),
-    secret_lab: null
+    secret_lab_attributes: null
   });
 });
 
