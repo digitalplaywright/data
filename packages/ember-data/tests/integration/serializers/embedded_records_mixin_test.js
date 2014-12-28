@@ -604,6 +604,38 @@ test("serialize with embedded objects (hasMany relationship)", function() {
   });
 });
 
+test("save deleted embedded objects ", function() {
+  var tom, league;
+  run(function(){
+    league = env.store.createRecord(HomePlanet, { name: "Villain League", id: "123" });
+    tom = env.store.createRecord(SuperVillain, { firstName: "Tom", lastName: "Dale", homePlanet: league, id: '1' });
+  });
+
+  run(tom, 'deleteRecord');
+
+  env.adapter.createRecord = function(store, type, record) {
+    return Ember.RSVP.resolve({ name: "Villain League", id: 123 });
+  };
+
+  env.container.register('serializer:homePlanet', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+    attrs: {
+      villains: {embedded: 'always'}
+    }
+  }));
+
+
+  run(function(){
+    league.save().then(function() {
+      ok(true, 'save operation was resolved');
+    });
+  });
+
+  console.log(league);
+
+});
+
+
+
 test("serialize deleted embedded objects ", function() {
   var tom, league;
   run(function(){
