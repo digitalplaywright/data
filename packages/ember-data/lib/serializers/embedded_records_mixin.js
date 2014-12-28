@@ -136,6 +136,94 @@ var EmbeddedRecordsMixin = Ember.Mixin.create({
     return this.formatEmbeddedKey ? this.formatEmbeddedKey(key) : key;
   },
 
+
+  /**
+   Add deleted records to the json if they are already persisted.
+   @method addDeletedRecords
+   @param {DS.Model} record
+   @param {String}   key
+   @return {Object}  jsonArray
+  **/
+  addDeletedRecords: function (record, key, jsonArray) {
+    var deletedRecords = record.get(key + '.relationship.deleted');
+
+    if (deletedRecords) {
+
+        deletedRecords.forEach(function (deletedRecord) {
+
+        if (deletedRecord.get('isDeleted') && !deletedRecord.get('isNew')) {
+          var serialized = deletedRecord.serialize({ includeId: true });
+
+          serialized._destroy = true;
+
+          jsonArray.pushObject(serialized);
+        }
+      });
+    }
+  },
+
+  /**
+   Mark all deleted records as willCommit.
+   @method willCommitDeletedRecords
+   @param {DS.Model} record
+  **/
+
+  willCommitDeletedRecords: function (record) {
+    function willCommitDeletedRecord(record) {
+      record.send('willCommit');
+    }
+
+    function willCommitDeletedRecords(name) {
+      var deletedKey = name + '.relationship.deleted';
+      var deletedRecords = record.get(deletedKey);
+      if (deletedRecords) {
+        deletedRecords.forEach(willCommitDeletedRecord);
+      }
+    }
+    record.eachRelationship(willCommitDeletedRecords);
+  },
+
+  /**
+     Mark all deleted records as didCommit.
+     @method didCommitDeletedRecords
+     @param {DS.Model} record
+  **/
+  didCommitDeletedRecords: function (record) {
+    //do not use record.adapterDidCommit() since
+    //the object is now deleted both server and
+    //client side
+    function didCommitDeletedRecord(record) {
+      record.send('didCommit');
+      record.unloadRecord();
+    }
+
+    function didCommitDeletedRecords(name) {
+      var deletedKey = name + '.relationship.deleted';
+      var deletedRecords = record.get(deletedKey);
+      if (deletedRecords) {
+        deletedRecords.forEach(didCommitDeletedRecord);
+        deletedRecords.clear();
+      }
+    }
+    record.eachRelationship(didCommitDeletedRecords);
+  },
+
+   /**
+     Failed to commit. Server and client side is not in
+     sync.
+
+     @method didFailToCommitDeletedRecords
+     @param {DS.Model} record
+   **/
+
+  didFailToCommitDeletedRecords: function (record) {
+
+      //FIXME: can we use contextual info from the server
+      //to give better error message?
+      record.set('isError', true);
+      throw "failed to commit deleted record";
+  },
+
   /**
     Serialize `belongsTo` relationship when it is configured as an embedded object.
 
@@ -313,6 +401,15 @@ var EmbeddedRecordsMixin = Ember.Mixin.create({
         this.removeEmbeddedForeignKey(record, embeddedRecord, relationship, serializedEmbeddedRecord);
         return serializedEmbeddedRecord;
       }, this);
+
+      //serialize deleted records
+
+      this.addDeletedRecords(record, relationship.key, json[key]);
+
+      this.willCommitDeletedRecords(record);
+      record.one('didCommit', this, 'didCommitDeletedRecords');
+      record.one('becameError', this, 'didFailToCommitDeletedRecords');
+
     }
   },
 

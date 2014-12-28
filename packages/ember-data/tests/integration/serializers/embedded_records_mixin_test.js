@@ -604,6 +604,44 @@ test("serialize with embedded objects (hasMany relationship)", function() {
   });
 });
 
+test("serialize deleted embedded objects ", function() {
+  var tom, league;
+  run(function(){
+    league = env.store.push(HomePlanet, { name: "Villain League", id: "123" });
+    tom = env.store.push(SuperVillain, { firstName: "Tom", lastName: "Dale", homePlanet: league, id: '1' });
+
+  });
+
+  run(tom, 'deleteRecord');
+
+  env.container.register('serializer:homePlanet', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+    attrs: {
+      villains: {embedded: 'always'}
+    }
+  }));
+
+  var serializer, json;
+  run(function(){
+    serializer = env.container.lookup("serializer:homePlanet");
+
+    json = serializer.serialize(league);
+  });
+
+  deepEqual(json, {
+    name: "Villain League",
+    villains_attributes: [{
+      id: get(tom, "id"),
+      first_name: "Tom",
+      last_name: "Dale",
+      home_planet_id: get(league, "id"),
+      secret_lab_id: null,
+      _destroy: true
+    }]
+  });
+});
+
+
+
 test("serialize with embedded objects (hasMany relationship) supports serialize:false", function() {
   run(function(){
     league = env.store.createRecord(HomePlanet, { name: "Villain League", id: "123" });

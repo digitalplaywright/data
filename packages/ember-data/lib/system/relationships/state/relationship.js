@@ -6,6 +6,7 @@ var forEach = Ember.EnumerableUtils.forEach;
 
 var Relationship = function(store, record, inverseKey, relationshipMeta) {
   this.members = new OrderedSet();
+  this.deleted = null;
   this.canonicalMembers = new OrderedSet();
   this.store = store;
   this.key = relationshipMeta.key;
@@ -157,6 +158,10 @@ Relationship.prototype = {
 
   removeRecordFromOwn: function(record) {
     this.members.delete(record);
+
+    if( this.deleted == null ) this.deleted = new Ember.A();
+    this.deleted.pushObject(record);
+
     this.notifyRecordRelationshipRemoved(record);
     this.record.updateRecordArrays();
   },
