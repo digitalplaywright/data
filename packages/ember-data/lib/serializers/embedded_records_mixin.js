@@ -29,7 +29,7 @@ var camelize = Ember.String.camelize;
   The `attrs` option for a resource `{ embedded: 'always' }` is shorthand for:
 
   ```js
-  { 
+  {
     serialize: 'records',
     deserialize: 'records'
   }
@@ -56,7 +56,7 @@ var camelize = Ember.String.camelize;
   If you do not overwrite `attrs` for a specific relationship, the `EmbeddedRecordsMixin`
   will behave in the following way:
 
-  BelongsTo: `{ serialize: 'id', deserialize: 'id' }`  
+  BelongsTo: `{ serialize: 'id', deserialize: 'id' }`
   HasMany:   `{ serialize: false, deserialize: 'ids' }`
 
   ### Model Relationships
@@ -160,27 +160,6 @@ var EmbeddedRecordsMixin = Ember.Mixin.create({
         }
       });
     }
-  },
-
-  /**
-   Mark all deleted records as willCommit.
-   @method willCommitDeletedRecords
-   @param {DS.Model} record
-  **/
-
-  willCommitDeletedRecords: function (record) {
-    function willCommitDeletedRecord(record) {
-      record.send('willCommit');
-    }
-
-    function willCommitDeletedRecords(name) {
-      var deletedKey = name + '.relationship.deleted';
-      var deletedRecords = record.get(deletedKey);
-      if (deletedRecords) {
-        deletedRecords.forEach(willCommitDeletedRecord);
-      }
-    }
-    record.eachRelationship(willCommitDeletedRecords);
   },
 
   /**
@@ -406,7 +385,6 @@ var EmbeddedRecordsMixin = Ember.Mixin.create({
 
       this.addDeletedRecords(record, relationship.key, json[key]);
 
-      this.willCommitDeletedRecords(record);
       record.one('didCommit', this, 'didCommitDeletedRecords');
       record.one('becameError', this, 'didFailToCommitDeletedRecords');
 
