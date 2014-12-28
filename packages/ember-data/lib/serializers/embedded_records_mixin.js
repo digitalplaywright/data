@@ -167,12 +167,9 @@ var EmbeddedRecordsMixin = Ember.Mixin.create({
      @method didCommitDeletedRecords
      @param {DS.Model} record
   **/
-  didCommitDeletedRecords: function (record) {
-    //do not use record.adapterDidCommit() since
-    //the object is now deleted both server and
-    //client side
+  didUpdateDeletedRecords: function (record) {
     function didCommitDeletedRecord(record) {
-      record.send('didCommit');
+      record.transitionTo('deleted.saved');
       record.unloadRecord();
     }
 
@@ -385,7 +382,7 @@ var EmbeddedRecordsMixin = Ember.Mixin.create({
 
       this.addDeletedRecords(record, relationship.key, json[key]);
 
-      record.one('didCommit', this, 'didCommitDeletedRecords');
+      record.one('didUpdate', this, 'didUpdateDeletedRecords');
       record.one('becameError', this, 'didFailToCommitDeletedRecords');
 
     }
